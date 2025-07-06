@@ -59,7 +59,6 @@ model_choice = st.selectbox(
         "mistralai/mistral-small-3.2-24b-instruct:free", # Explicitly free, good for coding/instructions
         "deepseek/deepseek-r1:free", # Explicitly free, strong reasoning
         "openrouter/cypher-alpha:free", # Explicitly free, all-purpose, code generation
-        "google/gemini-2.0-flash-experimental:free", # Explicitly free, good for coding/complex instructions
         "nvidia/llama-3.3-nemotron-super-49b-v1:free", # Explicitly free, advanced reasoning
         "qwen/qwq-32b:free" # Explicitly free, good for reasoning
     ],
