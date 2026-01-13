@@ -1,9 +1,13 @@
 import os
 import json
+from dotenv import load_dotenv
 import streamlit as st
 from openai import OpenAI
 import graphviz # Import the graphviz library for Python
 import streamlit.components.v1 as components # Keep for potential future use
+
+# Load environment variables from a local .env file if present (helps local development)
+load_dotenv()
 
 # --------------------------
 # Setup OpenRouter client
@@ -53,17 +57,37 @@ code_input = st.text_area(
 # --------------------------
 # Model selection
 # --------------------------
-model_choice = st.selectbox(
-    "AI Model (Free & Recommended for Code Analysis):",
-    [
-        "mistralai/mistral-small-3.2-24b-instruct:free", # Explicitly free, good for coding/instructions
-        "deepseek/deepseek-r1:free", # Explicitly free, strong reasoning
-        "openrouter/cypher-alpha:free", # Explicitly free, all-purpose, code generation
-        "nvidia/llama-3.3-nemotron-super-49b-v1:free", # Explicitly free, advanced reasoning
-        "qwen/qwq-32b:free" # Explicitly free, good for reasoning
-    ],
-    index=0 # Default to the first model
-)
+# Try to discover available models from the OpenRouter client so we don't select unavailable endpoints
+available_models = []
+try:
+    resp = client.models.list()
+    # Support both dict-like and object-like responses
+    data = getattr(resp, "data", None) or (resp.get("data") if isinstance(resp, dict) else None)
+    if not data and isinstance(resp, list):
+        data = resp
+
+    if data:
+        for m in data:
+            model_id = None
+            if isinstance(m, dict):
+                model_id = m.get("id") or m.get("model")
+            else:
+                model_id = getattr(m, "id", None) or getattr(m, "model", None)
+            if model_id:
+                available_models.append(model_id)
+except Exception as e:
+    # Don't fail the app on model discovery errors; we'll show defaults below and surface the warning
+    st.warning(f"Could not fetch model list from OpenRouter: {e}")
+
+if not available_models:
+    # Fallback: sensible defaults (may still be unavailable depending on OpenRouter account)
+    available_models = [
+        "openrouter/cypher-alpha:free",
+        "mistralai/mistral-small-3.2-24b-instruct:free",
+        "deepseek/deepseek-r1:free",
+    ]
+
+model_choice = st.selectbox("AI Model (choose an available model):", available_models, index=0)
 
 # --------------------------
 # Generate Button
